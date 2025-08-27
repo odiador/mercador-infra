@@ -1,0 +1,41 @@
+services:
+  redis:
+    image: redis:8.2.1-alpine
+    container_name: redis-mercador
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+
+  redisinsight:
+    image: redislabs/redisinsight:2.70.1
+    container_name: redisinsight
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    env_file:
+      - .env.prometheus
+    volumes:
+        - ./prometheus.yml.template:/etc/prometheus/prometheus.yml.template:ro
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache gettext >/dev/null 2>&1 || true
+        envsubst < /etc/prometheus/prometheus.yml.template > /etc/prometheus/prometheus.yml
+        exec prometheus --config.file=/etc/prometheus/prometheus.yml
+volumes:
+  redis_data:
+    driver: local
