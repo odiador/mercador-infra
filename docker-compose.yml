@@ -1,25 +1,6 @@
+version: "3.9"
+
 services:
-  redis:
-    image: redis:7.2-alpine
-    container_name: redis-mercador
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: ["redis-server", "--save", "60", "1", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-
-  redisinsight:
-    image: redislabs/redisinsight:latest
-    container_name: redisinsight
-    restart: unless-stopped
-    ports:
-      - "8001:8001"
-    depends_on:
-      - redis
-
   prometheus-init:
     image: alpine:3.18
     container_name: prometheus-init
@@ -38,7 +19,7 @@ services:
         echo "✅ Configuración generada con éxito."
 
   prometheus:
-    image: prom/prometheus:v2.53.0 # Buena práctica: usar una versión específica
+    image: prom/prometheus:v2.53.0
     container_name: prometheus
     restart: unless-stopped
     ports:
@@ -46,7 +27,7 @@ services:
     volumes:
       - prometheus_config:/etc/prometheus:ro
     depends_on:
-      prometheus-init: # <-- El cambio clave está aquí
+      prometheus-init:
         condition: service_completed_successfully
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -54,7 +35,5 @@ services:
       - --web.enable-lifecycle
 
 volumes:
-  redis_data:
-    driver: local
   prometheus_config:
     driver: local

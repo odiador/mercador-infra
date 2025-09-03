@@ -6,12 +6,10 @@ scrape_configs:
   - job_name: 'hono-backend'
     metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:3000']
+      - targets: ['${HONO_BACKEND_HOST}']
 
 remote_write:
   - url: ${GRAFANA_CLOUD_API_URL}
-#    authorization:
-#      credentials: ${GRAFANA_CLOUD_API_KEY}
     basic_auth:
       username: ${GRAFANA_CLOUD_API_ID}
       password: ${GRAFANA_CLOUD_API_KEY}
